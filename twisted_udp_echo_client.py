@@ -1,0 +1,34 @@
+# coding:UTF-8
+import twisted
+import twisted.internet.protocol
+import twisted.internet.reactor
+
+SERVER_HOST = "127.0.0.1"  # 服务主机
+SERVER_PORT = 8080  # 连接端口号
+CLIENT_PORT = 0
+
+class EchoClient(twisted.internet.protocol.DatagramProtocol):  # UDP客户端
+    def startProtocol(self):  # 连接回调
+        self.transport.connect(SERVER_HOST, SERVER_PORT)  # 连接
+        print("服务器连接成功，可以进行数据交互，如果要结束通讯，则直接回车。")
+        self.send()  # 进行消息发送
+
+    def datagramReceived(self, datagram, addr): # 接收客户端数据
+        print(datagram.decode("UTF-8"))  # 输出接收到的数据
+        self.send()  # 下一次数据发送
+
+    def send(self):
+        input_data = input("请输入要发送的数据：")
+        if input_data:
+            self.transport.write(input_data.encode("UTF-8"))  # 回应
+        else:  # 没有输入内容表示操作结束
+            twisted.internet.reactor.stop()  # 停止轮询
+
+
+def main():  # 主函数
+    twisted.internet.reactor.listenUDP(CLIENT_PORT, EchoClient())  # 服务监听
+    twisted.internet.reactor.run()  # 开启事件轮询
+
+
+if __name__ == "__main__":  # 判断程序执行名称
+    main()  # 调用主函数
